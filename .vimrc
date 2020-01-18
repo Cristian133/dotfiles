@@ -78,6 +78,8 @@ execute pathogen#infect()
 
 " NerdTree shows hidden files
 let NERDTreeShowHidden=1
+let g:NERDTreeWinSize=30
+"let g:Tlist_WinWidth=60
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -239,6 +241,28 @@ set undodir=~/.vim/undo
 " => Helpers functions
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+" terminal
+let g:term_buf = 0
+let g:term_win = 0
+
+function! Term_toggle(height)
+    if win_gotoid(g:term_win)
+        hide
+    else
+        botright new
+        exec "resize " . a:height
+        try
+            exec "buffer " . g:term_buf
+        catch
+            call termopen($SHELL, {"detach": 0})
+            let g:term_buf = bufnr("")
+            set nonumber
+        endtry
+        startinsert!
+        let g:term_win = win_getid()
+    endif
+endfunction
+
 "Do not close window when deleting a buffer
 command! Bclose call <SID>BufcloseCloseIt()
 function! <SID>BufcloseCloseIt()
@@ -332,17 +356,17 @@ endfunction
 " returns a string <branch/XX> where XX corresponds to the git status
 " (for example "<master/ M>")
 function CurrentGitStatus()
-    let gitoutput = split(system('git status --porcelain -b '.shellescape(expand('%')).' 2>/dev/null'),'\n')
-    if len(gitoutput) > 0
-        let b:gitstatus = strpart(get(gitoutput,0,''),3) . '/' . strpart(get(gitoutput,1,'  '),0,2)
-    else
-        let b:gitstatus = ''
-    endif
+  let gitoutput = split(system('git status --porcelain -b '.shellescape(expand('%')).' 2>/dev/null'),'\n')
+  if len(gitoutput) > 0
+    let b:gitstatus = strpart(get(gitoutput,0,''),3) . '/' . strpart(get(gitoutput,1,'  '),0,2)
+  else
+    let b:gitstatus = ''
+  endif
 endfunc
 autocmd BufEnter,BufWritePost * call CurrentGitStatus()
 
 function Highlight_Statusline()
-  hi User1            ctermfg=Yellow  cterm=bold
+  hi User1 ctermfg=Yellow cterm=bold
 endfunction
 
 autocmd ColorScheme * call Highlight_Statusline()
@@ -358,8 +382,19 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " tnoremap only terminal mode
+" Terminal go back to normal mode
 tnoremap <Esc> <C-\><C-n>
+tnoremap :q! <C-\><C-n>:q!<CR>
 
+" Toggle terminal on/off (neovim)
+nnoremap <A-t> :call TermToggle(10)<CR>
+inoremap <A-t> <Esc>:call TermToggle(10)<CR>
+tnoremap <A-t> <C-\><C-n>:call TermToggle(10)<CR>
+
+nnoremap <leader>t :call Term_toggle(10)<cr>
+tnoremap <leader>t <C-\><C-n>:call Term_toggle(10)<cr>
+
+" leader keys
 map <leader>1 :call ToggleH()<CR>
 map <leader>2 :call ToggleNumber()<CR>
 map <leader>3 :call ToggleCol80()<CR>
@@ -376,6 +411,7 @@ nnoremap <silent> <leader>Y "+y$
 " Yank to end of line
 map Y y$
 
+" files and buffers
 map <F4> :buffers<CR>:buffer<Space>
 map <F5> :NERDTreeToggle<CR>
 map <F6> :Bclose<CR>
@@ -484,6 +520,7 @@ map <leader>s? z=
 " Always show the status line
 set laststatus=2
 
+"statusline
 set statusline=%f
 set statusline+=\ \ 
 set statusline+=%1*%(\[%{b:gitstatus}]%)%*
@@ -515,6 +552,9 @@ set statusline+=\
 " automatic commands
 if has("autocmd")
   " file type detection
+
+  " dart
+  au BufRead,BufNewFile  *.dart set filetype=dart
 
   " FORTH
   au BufRead,BufNewFile  *.fth,*.FTH,*.fs,*.FS,*.ft,*.FT set filetype=forth
@@ -584,6 +624,7 @@ function! ColourStatusLineFileType()
     else
         setlocal expandtab shiftwidth=4 tabstop=4
         hi StatusLine ctermbg=grey ctermfg=235
+        hi StatusLineNC ctermbg=grey ctermfg=235
     endif
 endfunction
 
@@ -642,3 +683,22 @@ endif
 map T <C-]>
 
 "<C-t> para volver del tag
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" StatusLineTerm and TermCursor
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" Manually set the status line color.
+" active windows
+"hi StatusLineTerm ctermbg=grey ctermfg=blue
+" inactive windows
+"hi StatusLineTermNC ctermbg=grey ctermfg=yellow
+
+if has('nvim')
+  " active windows
+  "highlight! StatusLineTerm ctermbg=grey ctermfg=blue
+  " inactive windows
+  "highlight! StatusLineTermNC ctermbg=grey ctermfg=yellow
+  "highlight! link TermCursor Cursor
+  "highlight! TermCursorNC ctermbg=white ctermfg=blue
+endif
