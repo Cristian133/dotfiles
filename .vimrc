@@ -9,6 +9,7 @@
 "
 " Version:
 "           1.0 - 28/12/2019
+"           1.1 - 26/01/2020
 "
 " Sections:
 "           -> General
@@ -20,7 +21,9 @@
 "           -> Files, backups and undo
 "           -> Helpers funtions
 "           -> Editing mappings
-"           -> Moving around, tabs and buffers
+"           -> Open specials files
+"           -> Moving around windows and buffers
+"           -> Move and copy lines or selected blocks
 "           -> Blank space treatments
 "           -> Spell checking
 "           -> Status line
@@ -28,6 +31,7 @@
 "           -> Vimdiff
 "           -> Vimgrep
 "           -> Tags
+"           -> StatusLineTerm and TermCursor
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -80,7 +84,6 @@ execute pathogen#infect()
 let NERDTreeShowHidden=1
 let g:NERDTreeWinSize=30
 "let g:Tlist_WinWidth=60
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
@@ -142,7 +145,6 @@ set splitbelow
 " Do not reset cursor to start of line when moving around.
 set nostartofline
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Fonts
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -164,7 +166,6 @@ set encoding=utf8
 " Unix for new files and autodetect for the rest.
 set fileformats=unix,dos,mac
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Visual
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -173,7 +174,6 @@ set fileformats=unix,dos,mac
 " Super useful! From an idea by Michael Naumann
 vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
 vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" => Parenthesis/bracket
@@ -187,7 +187,6 @@ set matchpairs+=<:>
 
 " How many tenths of a second to blink when matching brackets.
 set mat=2
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Text, tab and indent related
@@ -221,7 +220,6 @@ set listchars=tab:→\ ,eol:↲,nbsp:␣,trail:•,extends:»,precedes:«,space:
 " Highlight conflict markers.
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" => Files, backups and undo
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -235,7 +233,6 @@ set backupdir=~/.vim/backups
 
 set undofile
 set undodir=~/.vim/undo
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Helpers functions
@@ -299,7 +296,7 @@ endfunction
 
 " highlight text from column 80
 let s:activatedh = 0
-function! ToggleH()
+function! ToggleCol80()
     if s:activatedh == 0
         let s:activatedh = 1
         match Search '\%80v.\+'
@@ -376,7 +373,6 @@ function! WindowNumber()
   return tabpagewinnr(tabpagenr())
 endfunction
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" =>  Editing mappings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -395,33 +391,25 @@ nnoremap <leader>t :call Term_toggle(10)<cr>
 tnoremap <leader>t <C-\><C-n>:call Term_toggle(10)<cr>
 
 " leader keys
-map <leader>1 :call ToggleH()<CR>
-map <leader>2 :call ToggleNumber()<CR>
-map <leader>3 :call ToggleCol80()<CR>
-map <leader>4 :call ToggleHex()<CR>
-map <leader>5 :call ToggleWrap()<CR>
-map <leader>6 $D
-imap <leader>6 <Esc>$D
-
-" Yank and put system pasteboard with <Leader>y/p.
-nnoremap <silent> <leader>p "+p
-nnoremap <silent> <leader>y "+y
-nnoremap <silent> <leader>Y "+y$
+map <leader>1 :call ToggleHex()<CR>
+map <leader>2 :call ToggleCol80()<CR>
+map <leader>3 :call ToggleNumber()<CR>
+map <leader>4 :call ToggleWrap()<CR>
 
 " Yank to end of line
 map Y y$
 
 " files and buffers
-map <F4> :buffers<CR>:buffer<Space>
+"map <F4> :buffers<CR>:buffer<Space>
+"plugin  bufexplorer
+map <F4> <leader>bt
+"plugin  NERDTree
 map <F5> :NERDTreeToggle<CR>
 map <F6> :Bclose<CR>
-
 " syntax-check
 map <F7> :make <CR>
-
 " tags work directory
 map <F8> :!ctags -R<CR>
-
 " buffer tex to pdf file
 map <F9> :w!<CR>:call Build()<CR>
 imap <F9> <Esc>:w!<CR>:call Built()<CR>
@@ -429,6 +417,18 @@ imap <F9> <Esc>:w!<CR>:call Built()<CR>
 " :W sudo saves the file
 " (useful for handling the permission-denied error)
 command W w !sudo tee % > /dev/null
+
+" save a file as root (,W)
+noremap <leader>W :w !sudo tee % > /dev/null<CR>
+
+" Fast saving
+map <leader>w :w!<cr>
+map <leader>q :q<cr>
+
+nmap <leader>l :set list!<CR>
+
+" Select all.
+map <Leader>a ggVG
 
 " gi moves to last insert mode (default)
 " gI moves to last modification
@@ -438,10 +438,8 @@ nnoremap gI `.
 map <space> /
 map <C-space> ?
 
-" Fast saving
-map <leader>w :w!<cr>
-
-nmap <leader>l :set list!<CR>
+" Show current file as HTML. (to paste into Keynote)
+nmap <Leader>h :TOhtml<CR>:w<cr>:!open %<CR>:q<CR>
 
 " Close the current buffer
 map <leader>bd :Bclose<cr>:tabclose<cr>gT
@@ -451,16 +449,27 @@ map <leader>ba :bufdo bd<cr>
 
 " Switch CWD to the directory of the open buffer
 map <leader>cd :cd %:p:h<cr>:pwd<cr>
-
-" open .vimrc
-map <leader>e :e ~/.vimrc<CR>
-
 " Disable highlight when <leader><CR> is pressed
 map <silent> <leader><CR> :noh<CR>
 
 " Return to last edit position when opening files (You want this!)
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Open specials files
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" open .vimrc
+map <leader>e :e ~/.vimrc<CR>
+
+" open help
+map <leader>h :e ~/.vim/help/help<CR>
+
+" Quickly open a buffer for scribble
+map <leader>q :e ~/.vim/tmp/buffer<cr>
+
+" Quickly open a markdown buffer for scribble
+map <leader>x :e ~/.vim/tmp/buffer.md<cr>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Moving around windows and buffers
@@ -476,12 +485,38 @@ map <C-down>  <C-W>j
 map <C-left>  <C-W>h
 map <C-right> <C-W>l
 
-" Move a line of text using ALT+[jk] or ALT+[Up-Down]
-nmap <M-Up> mz:m-2<cr>`z
-nmap <M-Down> mz:m+<cr>`z
-vmap <M-Up> :m'<-2<cr>`>my`<mzgv`yo`z
-vmap <M-Down> :m'>+<cr>`<my`>mzgv`yo`z
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Move and copy lines or selected blocks
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+" Move a line or select block of text using ALT+[Up-Down]
+nnoremap <M-Down> :m .+1<CR>==
+nnoremap <M-Up> :m .-2<CR>==
+inoremap <M-Down> <Esc>:m .+1<CR>==gi
+inoremap <M-Up> <Esc>:m .-2<CR>==gi
+vnoremap <M-Down> :m '>+1<CR>gv=gv
+vnoremap <M-Up> :m '<-2<CR>gv=gv
+
+" Copy a line or select block of text using SHIFT+ALT+[Up-Down]
+nnoremap <M-S-Down> :t .+0<CR>==
+nnoremap <M-S-Up> :t .-1<CR>==
+inoremap <M-S-Down> <Esc>:t .+0<CR>==gi
+inoremap <M-S-Up> <Esc>:t .-1<CR>==gi
+vnoremap <M-S-Down> :t '>+0<CR>gv=gv
+vnoremap <M-S-Up> :t '<-1<CR>gv=gv
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => System pasteboard
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" Yank and put system pasteboard with <Leader>y/p
+nnoremap <silent> <leader>y "+yy
+nnoremap <silent> <leader>Y "+y$
+nnoremap <silent> <leader>p "+p
+
+" Yank and put system pasteboard with ALT+[c/v]
+nnoremap <silent> <M-c> "+yy
+nnoremap <silent> <M-v> "+p
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Blank space treatments
@@ -497,7 +532,6 @@ endif
 map <F10> :let _s=@/<Bar>:%s/\s\+$//e<Bar>:let @/=_s<Bar><CR>
 imap <F10> <Esc>:let _s=@/<Bar>:%s/\s\+$//e<Bar>:let @/=_s<Bar><CR>
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Spelling checking
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -511,7 +545,6 @@ map <leader>sn ]s
 map <leader>sp [s
 map <leader>sa zg
 map <leader>s? z=
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Status line
@@ -543,7 +576,6 @@ set statusline+=Total:
 set statusline+=\[\%3L
 set statusline+=\ lines\]
 set statusline+=\ 
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " File types
@@ -658,7 +690,6 @@ function! Build()
     endif
 endfunction
 
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Vimdiff
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -673,7 +704,6 @@ endif
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 "TODO
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Tags
@@ -694,11 +724,11 @@ map T <C-]>
 " inactive windows
 "hi StatusLineTermNC ctermbg=grey ctermfg=yellow
 
-if has('nvim')
+"if has('nvim')
   " active windows
   "highlight! StatusLineTerm ctermbg=grey ctermfg=blue
   " inactive windows
   "highlight! StatusLineTermNC ctermbg=grey ctermfg=yellow
   "highlight! link TermCursor Cursor
   "highlight! TermCursorNC ctermbg=white ctermfg=blue
-endif
+"endif
