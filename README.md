@@ -1,2 +1,2 @@
 # dotfiles
-.dotfiles for Bash (Linux)/ Bash on Debian or Ubuntu 
+.dotfiles for bash vim nvim tmux

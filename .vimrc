@@ -1,5 +1,5 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Mantiene:
+" Maintains:
 "           Cristian Andrione
 "           cristian.andrione@gmail.com
 "

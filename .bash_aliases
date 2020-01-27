@@ -46,3 +46,6 @@ unset color_prompt force_color_prompt
 
 # IP
 alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
+
+# Print each PATH entry on a separate line
+alias path='echo -e ${PATH//:/\\n}'
