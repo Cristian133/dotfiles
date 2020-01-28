@@ -38,7 +38,7 @@ alias q='deactivate'
 alias ipy='ipython3'
 
 # Caminos importantes
-alias cdf='cd $HOME/Fuentes'
+alias cdr='cd $HOME/src/repo/'
 
 # Prompt
 export PS1="\[\033[01;34m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[0;33m\]\$(__git_ps1 '->(%s)')\[\033[00m\]\$ "
