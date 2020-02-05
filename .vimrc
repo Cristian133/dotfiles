@@ -85,6 +85,13 @@ let NERDTreeShowHidden=1
 let g:NERDTreeWinSize=30
 "let g:Tlist_WinWidth=60
 
+"highlight duration
+let g:highlightedyank_highlight_duration = 2000
+
+"A negative number makes the highlight persistent
+"let g:highlightedyank_highlight_duration = -1
+
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -158,6 +165,9 @@ catch
 endtry
 
 set background=dark
+
+"redefine the HighlightedyankRegion
+highlight HighlightedyankRegion cterm=reverse gui=reverse
 
 " Set encoding
 set encoding=utf8

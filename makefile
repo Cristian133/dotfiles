@@ -18,6 +18,7 @@ vim:
 	git clone https://github.com/preservim/nerdtree.git ${HOME}/.vim/bundle/nerdtree/
 	git clone https://github.com/jlanzarotta/bufexplorer.git ${HOME}/.vim/bundle/bufexplorer/
 	git clone https://github.com/preservim/nerdcommenter.git ${HOME}/.vim/bundle/nerdcommenter/
+	git clone https://github.com/machakann/vim-highlightedyank.git ${HOME}/.vim/bundle/vim-highlightedyank/
 	mkdir -p ${HOME}/.vim/colors
 	curl -LSso ${HOME}/.vim/colors/hybrid.vim https://raw.githubusercontent.com/w0ng/vim-hybrid/master/colors/hybrid.vim
 	mkdir -p ${HOME}/.vim/help
