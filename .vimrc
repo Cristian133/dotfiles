@@ -7,9 +7,14 @@
 "           Amir Salihefendic
 "           http://amix.dk - amix@amix.dk
 "
+"           Lars Moelleken
+"           http://moelleken.org - lars@moelleken.org
+"
 " Version:
 "           1.0 - 28/12/2019
 "           1.1 - 26/01/2020
+"           1.2 - 30/07/2020
+"           1.3 - 23/12/2020
 "
 " Sections:
 "           -> General
@@ -77,27 +82,12 @@ set history=1000
 " Tell us about changes.
 set report=0
 
-" Manage your 'runtimepath'
-execute pathogen#infect()
-
-" NerdTree shows hidden files
-let NERDTreeShowHidden=1
-let g:NERDTreeWinSize=30
-"let g:Tlist_WinWidth=60
-
-"highlight duration
-let g:highlightedyank_highlight_duration = 2000
-
-"A negative number makes the highlight persistent
-"let g:highlightedyank_highlight_duration = -1
-
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " Set lines to the cursor - when moving vertically using j/k or Up/Down
-set so=0
+set so=3
 
 " Show line numbers or current line number
 " in combination with relativenumber
@@ -160,14 +150,14 @@ set nostartofline
 syntax enable
 
 try
+    "let g:hybrid_custom_term_colors = 1
+    " Remove this line if using the default palette.
+    let g:hybrid_reduced_contrast = 1
 	colorscheme hybrid
 catch
 endtry
 
 set background=dark
-
-"redefine the HighlightedyankRegion
-highlight HighlightedyankRegion cterm=reverse gui=reverse
 
 " Set encoding
 set encoding=utf8
@@ -209,8 +199,8 @@ set expandtab
 set smarttab
 
 " Linebreak on 79 characters
-"set linebreak
-"set textwidth=79
+set linebreak
+set textwidth=79
 
 set autoindent "Auto indent
 set smartindent "Smart indent
@@ -244,161 +234,27 @@ set backupdir=~/.vim/backups
 set undofile
 set undodir=~/.vim/undo
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Helpers functions
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-" terminal
-let g:term_buf = 0
-let g:term_win = 0
-
-function! Term_toggle(height)
-    if win_gotoid(g:term_win)
-        hide
-    else
-        botright new
-        exec "resize " . a:height
-        try
-            exec "buffer " . g:term_buf
-        catch
-            call termopen($SHELL, {"detach": 0})
-            let g:term_buf = bufnr("")
-            set nonumber
-        endtry
-        startinsert!
-        let g:term_win = win_getid()
-    endif
-endfunction
-
-"Do not close window when deleting a buffer
-command! Bclose call <SID>BufcloseCloseIt()
-function! <SID>BufcloseCloseIt()
-	let l:currentBufNum = bufnr("%")
-	let l:alternateBufNum = bufnr("#")
-
-	if buflisted(l:alternateBufNum)
-		buffer #
-	else
-		bnext
-	endif
-
-	if bufnr("%") == l:currentBufNum
-		new
-	endif
-
-	if buflisted(l:currentBufNum)
-		execute("bdelete! ".l:currentBufNum)
-	endif
-endfunction
-
-" current buffer size
-function! FileSize()
-    let bytes = getfsize(expand("%:p"))
-    if bytes <= 0
-        return ""
-    endif
-    if bytes < 1024
-        return bytes
-    else
-        return (bytes / 1024) . "K"
-    endif
-endfunction
-
-" highlight text from column 80
-let s:activatedh = 0
-function! ToggleCol80()
-    if s:activatedh == 0
-        let s:activatedh = 1
-        match Search '\%80v.\+'
-    else
-        let s:activatedh = 0
-        match none
-    endif
-endfunction
-
-" number or relativenumber
-function! ToggleNumber()
-    if(&relativenumber == 1)
-        set norelativenumber
-        set number
-    else
-        set relativenumber
-    endif
-endfunc
-
-" hexadecimal
-let s:activatehex = 0
-function! ToggleHex()
-    if s:activatehex == 0
-        let s:activatehex = 1
-        :%!xxd
-    else
-        let s:activatedhex = 0
-        :%!xxd -r
-    endif
-endfunction
-
-"Toggle wrap - nowrap (líneas reales - líneas visibles)
-let s:activatewrap = 0
-function! ToggleWrap()
-    if s:activatewrap == 0
-        let s:activatewrap = 1
-        set nowrap
-    else
-        let s:activatewrap = 0
-        set wrap
-    endif
-endfunction
-
-"Get git branch and status of edited file
-function! GitBranch()
-  return system("git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n'")
-endfunction
-
-function! StatuslineGit()
-  let l:branchname = GitBranch()
-  return strlen(l:branchname) > 0?'  '.l:branchname.' ':''
-endfunction
-
-" returns a string <branch/XX> where XX corresponds to the git status
-" (for example "<master/ M>")
-function CurrentGitStatus()
-  let gitoutput = split(system('git status --porcelain -b '.shellescape(expand('%')).' 2>/dev/null'),'\n')
-  if len(gitoutput) > 0
-    let b:gitstatus = strpart(get(gitoutput,0,''),3) . '/' . strpart(get(gitoutput,1,'  '),0,2)
-  else
-    let b:gitstatus = ''
-  endif
-endfunc
-autocmd BufEnter,BufWritePost * call CurrentGitStatus()
-
-function Highlight_Statusline()
-  hi User1 ctermfg=Yellow cterm=bold
-endfunction
-
-autocmd ColorScheme * call Highlight_Statusline()
-autocmd BufEnter * call Highlight_Statusline()
-
-function! WindowNumber()
-  return tabpagewinnr(tabpagenr())
-endfunction
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" =>  Editing mappings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" tnoremap only terminal mode
-" Terminal go back to normal mode
-tnoremap <Esc> <C-\><C-n>
-tnoremap :q! <C-\><C-n>:q!<CR>
+if has('nvim')
 
-" Toggle terminal on/off (neovim)
-nnoremap <A-t> :call TermToggle(10)<CR>
-inoremap <A-t> <Esc>:call TermToggle(10)<CR>
-tnoremap <A-t> <C-\><C-n>:call TermToggle(10)<CR>
+    " Toggle terminal on/off (neovim)
+    nnoremap <leader>t :call Term_toggle(10)<cr>
+    tnoremap <leader>t <C-\><C-n>:call Term_toggle(10)<cr>
 
-nnoremap <leader>t :call Term_toggle(10)<cr>
-tnoremap <leader>t <C-\><C-n>:call Term_toggle(10)<cr>
+    " Terminal go back to normal mode
+    tnoremap <Esc> <C-\><C-n>
+    tnoremap :q! <C-\><C-n>:q!<CR>
+
+endif
+
+"nnoremap <leader>" viw<esc>a"<esc>bi"<esc>lel
+"nnoremap <leader>' viw<esc>a'<esc>bi'<esc>lel
+"nnoremap <leader>¿ viw<esc>a?<esc>bi¿<esc>lel
+"nnoremap <leader>< viw<esc>a><esc>bi<<esc>lel
 
 " leader keys
 map <leader>1 :call ToggleHex()<CR>
@@ -410,17 +266,11 @@ map <leader>4 :call ToggleWrap()<CR>
 map Y y$
 
 " files and buffers
-"map <F4> :buffers<CR>:buffer<Space>
-"plugin  bufexplorer
-map <F4> <leader>bt
-"plugin  NERDTree
-map <F5> :NERDTreeToggle<CR>
+map <F4> :buffers<CR>:buffer<Space>
+map <F5> :Explore<CR>
 map <F6> :Bclose<CR>
+
 " syntax-check
-map <F7> :make <CR>
-" tags work directory
-map <F8> :!ctags -R<CR>
-" buffer tex to pdf file
 map <F9> :w!<CR>:call Build()<CR>
 imap <F9> <Esc>:w!<CR>:call Built()<CR>
 
@@ -431,14 +281,26 @@ command W w !sudo tee % > /dev/null
 " save a file as root (,W)
 noremap <leader>W :w !sudo tee % > /dev/null<CR>
 
+"historial de búsquedas
+map <leader>b q/
+
+"historial de Ex-commands
+map <leader>x q:
+
+"listado de registros
+map <leader>r :registers<CR>
+
+"listado de marcas
+map <leader>m :marks<CR>
+
+" historial de saltos
 " Fast saving
+nmap <Leader>j :call GotoJump()<CR>
+
 map <leader>w :w!<cr>
 map <leader>q :q<cr>
 
 nmap <leader>l :set list!<CR>
-
-" Select all.
-map <Leader>a ggVG
 
 " gi moves to last insert mode (default)
 " gI moves to last modification
@@ -452,7 +314,7 @@ map <C-space> ?
 nmap <Leader>h :TOhtml<CR>:w<cr>:!open %<CR>:q<CR>
 
 " Close the current buffer
-map <leader>bd :Bclose<cr>:tabclose<cr>gT
+map <leader>bd :Bclose<cr>
 
 " Close all the buffers
 map <leader>ba :bufdo bd<cr>
@@ -472,18 +334,14 @@ au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g
 " open .vimrc
 map <leader>e :e ~/.vimrc<CR>
 
-" open help
-map <leader>h :e ~/.vim/help/help<CR>
-
-" Quickly open a buffer for scribble
-map <leader>q :e ~/.vim/tmp/buffer<cr>
-
-" Quickly open a markdown buffer for scribble
-map <leader>x :e ~/.vim/tmp/buffer.md<cr>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Moving around windows and buffers
+" => Moving around windows, buffers and marks
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"
+"marks
+map <leader><up> ['
+map <leader><down> ]'
 
 " buffers
 map <leader><right> :bnext<cr>
@@ -542,19 +400,6 @@ endif
 map <F10> :let _s=@/<Bar>:%s/\s\+$//e<Bar>:let @/=_s<Bar><CR>
 imap <F10> <Esc>:let _s=@/<Bar>:%s/\s\+$//e<Bar>:let @/=_s<Bar><CR>
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Spelling checking
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-" Toggle <,ss> spell checking
-"setlocal spell spelllang=es
-map <leader>ss :setlocal spell spelllang=es<cr>
-
-" Shortcuts using <leader>
-map <leader>sn ]s
-map <leader>sp [s
-map <leader>sa zg
-map <leader>s? z=
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Status line
@@ -563,29 +408,30 @@ map <leader>s? z=
 " Always show the status line
 set laststatus=2
 
-"statusline
-set statusline=%f
-set statusline+=\ \ 
-set statusline+=%1*%(\[%{b:gitstatus}]%)%*
-set statusline+=%=
-set statusline+=Buffer:
-set statusline+=\[%n%H%M%R%W]\ 
-set statusline+=\ \ 
-set statusline+=FileType:
-set statusline+=\%y
-set statusline+=\ \ 
-"set statusline+=size:
-"set statusline+=\[%{FileSize()}]
-"set statusline+=\ \ 
-set statusline+=Cursor:
-set statusline+=\[\%3l
-set statusline+=/ 
-set statusline+=\%2c\]
-set statusline+=\ \ 
-set statusline+=Total:
-set statusline+=\[\%3L
-set statusline+=\ lines\]
-set statusline+=\ 
+set statusline=
+set statusline+=%#DiffAdd#%{(mode()=='n')?'\ \ NORMAL\ ':''}
+set statusline+=%#DiffChange#%{(mode()=='i')?'\ \ INSERT\ ':''}
+set statusline+=%#DiffDelete#%{(mode()=='r')?'\ \ RPLACE\ ':''}
+set statusline+=%#Cursor#%{(mode()=='v')?'\ \ VISUAL\ ':''}
+set statusline+=%2*%{(mode()=='t')?'\ \ TERMINAL\ ':''}%*
+set statusline+=%3*%{(mode()=='x')?'\ \ EX\ ':''}%*
+set statusline+=%#Cursor#               " colour
+set statusline+=\ %n\                   " buffer number
+set statusline+=%#Visual#               " colour
+set statusline+=%{&paste?'\ PASTE\ ':''}
+set statusline+=%{&spell?'\ SPELL\ ':''}
+set statusline+=%#CursorIM#             " colour
+set statusline+=%R                      " readonly flag
+set statusline+=%M                      " modified [+] flag
+set statusline+=%#Cursor#               " colour
+set statusline+=%#CursorLine#           " colour
+set statusline+=\ %t\                   " short file name
+set statusline+=%1*%{StatuslineGit()}%*
+set statusline+=%=                      " right align
+set statusline+=%#CursorLine#           " colour
+set statusline+=\ %{strlen(&filetype)?&filetype:'none'}\     "filetype
+set statusline+=\ %3*%3l:%-2c\         " line + column
+set statusline+=\ %3p%%\                " percentage
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " File types
@@ -695,7 +541,10 @@ function! Build()
     elseif &filetype == 'java'
         execute "! javac %"
         execute "! java" name
-    else
+     elseif &filetype == 'rust'
+        "execute "! cargo build"
+        execute "! cargo run"
+   else
         echo "No sabemos como procesar este tipo de archivo"
     endif
 endfunction
@@ -724,6 +573,7 @@ map T <C-]>
 
 "<C-t> para volver del tag
 
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " StatusLineTerm and TermCursor
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -734,11 +584,185 @@ map T <C-]>
 " inactive windows
 "hi StatusLineTermNC ctermbg=grey ctermfg=yellow
 
-"if has('nvim')
-  " active windows
-  "highlight! StatusLineTerm ctermbg=grey ctermfg=blue
-  " inactive windows
-  "highlight! StatusLineTermNC ctermbg=grey ctermfg=yellow
-  "highlight! link TermCursor Cursor
-  "highlight! TermCursorNC ctermbg=white ctermfg=blue
-"endif
+if has('nvim')
+   active windows
+  highlight! StatusLineTerm ctermbg=grey ctermfg=blue
+   inactive windows
+  highlight! StatusLineTermNC ctermbg=grey ctermfg=yellow
+  highlight! link TermCursor Cursor
+  highlight! TermCursorNC ctermbg=white ctermfg=blue
+endif
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Helper functions
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" terminal
+let g:term_buf = 0
+let g:term_win = 0
+
+function! Term_toggle(height)
+    if win_gotoid(g:term_win)
+        hide
+    else
+        botright new
+        exec "resize " . a:height
+        try
+            exec "buffer " . g:term_buf
+        catch
+            call termopen($SHELL, {"detach": 0})
+            let g:term_buf = bufnr("")
+            set nonumber
+        endtry
+        startinsert!
+        let g:term_win = win_getid()
+    endif
+endfunction
+
+"Do not close window when deleting a buffer
+command! Bclose call <SID>BufcloseCloseIt()
+function! <SID>BufcloseCloseIt()
+    let l:currentBufNum = bufnr("%")
+    let l:alternateBufNum = bufnr("#")
+
+    if buflisted(l:alternateBufNum)
+        buffer #
+    else
+        bnext
+    endif
+
+    if bufnr("%") == l:currentBufNum
+        new
+    endif
+
+    if buflisted(l:currentBufNum)
+        execute("bdelete! ".l:currentBufNum)
+    endif
+endfunction
+
+" current buffer size
+function! FileSize()
+    let bytes = getfsize(expand("%:p"))
+    if bytes <= 0
+        return ""
+    endif
+    if bytes < 1024
+        return bytes
+    else
+        return (bytes / 1024) . "K"
+    endif
+endfunction
+
+" highlight text from column 80
+let s:activatedh = 0
+function! ToggleCol80()
+    if s:activatedh == 0
+        let s:activatedh = 1
+        match Search '\%80v.\+'
+    else
+        let s:activatedh = 0
+        match none
+    endif
+endfunction
+
+" number or relativenumber
+function! ToggleNumber()
+    if(&relativenumber == 1)
+        set norelativenumber
+        set number
+    else
+        set relativenumber
+    endif
+endfunc
+
+" hexadecimal
+let s:activatehex = 0
+function! ToggleHex()
+    if s:activatehex == 0
+        let s:activatehex = 1
+        :%!xxd
+    else
+        let s:activatedhex = 0
+        :%!xxd -r
+    endif
+endfunction
+
+"Toggle wrap - nowrap (líneas reales - líneas visibles)
+let s:activatewrap = 0
+function! ToggleWrap()
+    if s:activatewrap == 0
+        let s:activatewrap = 1
+        set nowrap
+    else
+        let s:activatewrap = 0
+        set wrap
+    endif
+endfunction
+
+"Get git branch and status of edited file
+function! GitBranch()
+  return system("git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n'")
+endfunction
+
+function! StatuslineGit()
+  let l:branchname = GitBranch()
+  return strlen(l:branchname) > 0?'  '.l:branchname.' ':''
+endfunction
+
+" returns a string <branch/XX> where XX corresponds to the git status
+" (for example "<master/ M>")
+function CurrentGitStatus()
+  let gitoutput = split(system('git status --porcelain -b '.shellescape(expand('%')).' 2>/dev/null'),'\n')
+  if len(gitoutput) > 0
+    let b:gitstatus = strpart(get(gitoutput,0,''),3) . '/' . strpart(get(gitoutput,1,'  '),0,2)
+  else
+    let b:gitstatus = ''
+  endif
+endfunc
+autocmd BufEnter,BufWritePost * call CurrentGitStatus()
+
+function! VisualSelection(direction, extra_filter) range
+    let l:saved_reg = @"
+    execute "normal! vgvy"
+
+    let l:pattern = escape(@", '\\/.*$^~[]')
+    let l:pattern = substitute(l:pattern, "\n$", "", "")
+
+    if a:direction == 'b'
+        execute "normal ?" . l:pattern . "^M"
+    elseif a:direction == 'gv'
+        call CmdLine("Ack \"" . l:pattern . "\" " )
+    elseif a:direction == 'replace'
+        call CmdLine("%s" . '/'. l:pattern . '/')
+    elseif a:direction == 'f'
+        execute "normal /" . l:pattern . "^M"
+    endif
+
+    let @/ = l:pattern
+    let @" = l:saved_reg
+endfunction
+
+function Highlight_Statusline()
+    hi User1 ctermfg=Yellow cterm=bold
+endfunction
+
+autocmd ColorScheme * call Highlight_Statusline()
+autocmd BufEnter * call Highlight_Statusline()
+
+function! WindowNumber()
+    return tabpagewinnr(tabpagenr())
+endfunction
+
+function! GotoJump()
+    jumps
+    let j = input("Please select your jump: ")
+    if j != ''
+        let pattern = '\v\c^\+'
+        if j =~ pattern
+            let j = substitute(j, pattern, '', 'g')
+            execute "normal " . j . "\<c-i>"
+        else
+            execute "normal " . j . "\<c-o>"
+        endif
+    endif
+endfunction
